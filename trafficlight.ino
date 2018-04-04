@@ -29,14 +29,14 @@ const char *tf1MapByMode[] = {
   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "gggggggggggggggggggggggggggggggggggg",
-  "rrrrrrrrrrrrrraaggggggggbbbbbyyyrrrr",
+  "rrrrrrrrrrrrrraaagggggggbbbbbyyyrrrr",
   "cccccccccccccccccccccccccccccccccccc"};
 const char *tf2MapByMode[] = {
   "gggggggggggggggggggggggggggggggggggg",
   "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
-  "rrrrrrrrrrrrrraaggggggggbbbbbyyyrrrr",
+  "rrrrrrrrrrrrrraaagggggggbbbbbyyyrrrr",
   "cccccccccccccccccccccccccccccccccccc"};
 // 012345678901234567890123456789012345
 
@@ -51,16 +51,11 @@ struct TrafficLight {
 
 TrafficLight tl1, tl2;
 int blinkState = LOW;
+int timerCounter = 0;
 
-void update_tl_state(TrafficLight* tl) {
-  tl->stateIndex++;
-  if (tl->stateIndex >= 36) {
-    tl->stateIndex = 0;
-  }
-
+void draw_tl(TrafficLight* tl) {
   char *stateMap = tl->mapByMode[tl->modeIndex];
   char state = stateMap[tl->stateIndex];
-  Serial.print(state);
   
   int red = LOW, yellow = LOW, green = LOW;
   switch(state) {
@@ -90,6 +85,19 @@ void update_tl_state(TrafficLight* tl) {
   digitalWrite(tl->pinGreen, green);
 }
 
+void clear_tl(TrafficLight* tl) {
+  digitalWrite(tl->pinRed, LOW);
+  digitalWrite(tl->pinYellow, LOW);
+  digitalWrite(tl->pinGreen, LOW);
+}
+
+void update_tl_state(TrafficLight* tl) {
+  tl->stateIndex++;
+  if (tl->stateIndex >= 36) {
+    tl->stateIndex = 0;
+  }
+}
+
 void update_tl_mode(TrafficLight* tl) {
   if (digitalRead(PIN_MODE_0) == LOW)
     tl->modeIndex = 0;
@@ -105,28 +113,44 @@ void update_tl_mode(TrafficLight* tl) {
     tl->modeIndex = 4;
   if (digitalRead(PIN_MODE_4) == LOW)
     tl->modeIndex = 5;
-
-  Serial.print(tl->modeIndex);
 }
 
-void update_traffic_lights() {
+void update_blink_state() {
   if (blinkState == LOW) {
     blinkState = HIGH;
   } else {
     blinkState = LOW;
   }
+}
+
+void on_timer() {
+  timerCounter++;
+
+  // every 1000 ms
+  if (timerCounter >= 100) {
+    timerCounter = 0;
+  }
+
+  // every 500 ms
+  if ((timerCounter % 50) == 0) {
+    update_blink_state();
+
+    update_tl_state(&tl1);
+    update_tl_state(&tl2);
+  }
+
+  draw_tl(&tl1);
+  draw_tl(&tl2);
+  // duty ratio 5%
+  delayMicroseconds(500);
+  clear_tl(&tl1);
+  clear_tl(&tl2);
 
   update_tl_mode(&tl1);
-  update_tl_state(&tl1);
-  Serial.println(tl1.stateIndex);  
   update_tl_mode(&tl2);
-  update_tl_state(&tl2);
-  Serial.println(tl2.stateIndex);
 }
 
 void setup() {
-  Serial.begin(9600);
-  
   pinMode(PIN_TF1_RED, OUTPUT);
   pinMode(PIN_TF1_YELLOW, OUTPUT);
   pinMode(PIN_TF1_GREEN, OUTPUT);
@@ -153,7 +177,7 @@ void setup() {
   tl2.pinYellow = PIN_TF2_YELLOW;
   tl2.pinGreen = PIN_TF2_GREEN;
 
-  MsTimer2::set(500, update_traffic_lights);
+  MsTimer2::set(10, on_timer);
   MsTimer2::start();
 }
 
