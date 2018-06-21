@@ -27,13 +27,13 @@ const byte PIN_MODE_4 = 12;
 const char *tf1MapByMode[] = {
   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
   "gggggggggggggggggggggggggggggggggggg",
   "rrrrrrrrrrrrrraaagggggggbbbbbyyyrrrr",
   "cccccccccccccccccccccccccccccccccccc"};
 const char *tf2MapByMode[] = {
   "gggggggggggggggggggggggggggggggggggg",
-  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
   "rrrrrrrrrrrrrraaagggggggbbbbbyyyrrrr",
@@ -85,12 +85,6 @@ void draw_tl(TrafficLight* tl) {
   digitalWrite(tl->pinGreen, green);
 }
 
-void clear_tl(TrafficLight* tl) {
-  digitalWrite(tl->pinRed, LOW);
-  digitalWrite(tl->pinYellow, LOW);
-  digitalWrite(tl->pinGreen, LOW);
-}
-
 void update_tl_state(TrafficLight* tl) {
   tl->stateIndex++;
   if (tl->stateIndex >= 36) {
@@ -137,14 +131,10 @@ void on_timer() {
 
     update_tl_state(&tl1);
     update_tl_state(&tl2);
-  }
 
-  draw_tl(&tl1);
-  draw_tl(&tl2);
-  // duty ratio 5%
-  delayMicroseconds(500);
-  clear_tl(&tl1);
-  clear_tl(&tl2);
+    draw_tl(&tl1);
+    draw_tl(&tl2);
+  }
 
   update_tl_mode(&tl1);
   update_tl_mode(&tl2);
