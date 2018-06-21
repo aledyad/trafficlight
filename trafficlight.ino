@@ -19,21 +19,21 @@ const byte PIN_MODE_3 = 11;
 const byte PIN_MODE_4 = 12;
 
 // r - red
-// a - red + yellow
-// g - green
-// b - blink green
 // y - yellow
+// g - green
+// a - red + yellow
+// b - blink green
 // c - blink yellow
 const char *tf1MapByMode[] = {
   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "gggggggggggggggggggggggggggggggggggg",
   "rrrrrrrrrrrrrraaagggggggbbbbbyyyrrrr",
   "cccccccccccccccccccccccccccccccccccc"};
 const char *tf2MapByMode[] = {
   "gggggggggggggggggggggggggggggggggggg",
-  "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
   "rrrrrrrrrrrrrraaagggggggbbbbbyyyrrrr",
@@ -124,16 +124,27 @@ void update_blink_state() {
 }
 
 void on_timer() {
-  update_blink_state();
+  timerCounter++;
 
-  timerCounter = (timerCounter + 1) % 2 ;
-  if (timerCounter == 1) {
+  // every 1000 ms
+  if (timerCounter >= 100) {
+    timerCounter = 0;
+  }
+
+  // every 500 ms
+  if ((timerCounter % 50) == 0) {
+    update_blink_state();
+
     update_tl_state(&tl1);
     update_tl_state(&tl2);
   }
 
   draw_tl(&tl1);
   draw_tl(&tl2);
+  // duty ratio 5%
+  delayMicroseconds(500);
+  clear_tl(&tl1);
+  clear_tl(&tl2);
 
   update_tl_mode(&tl1);
   update_tl_mode(&tl2);
@@ -166,7 +177,7 @@ void setup() {
   tl2.pinYellow = PIN_TF2_YELLOW;
   tl2.pinGreen = PIN_TF2_GREEN;
 
-  MsTimer2::set(500, on_timer);
+  MsTimer2::set(10, on_timer);
   MsTimer2::start();
 }
 
